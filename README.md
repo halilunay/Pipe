@@ -36,8 +36,8 @@ Eğer "Permission denied" gibi bir hata alırsanız, `chmod +x pipe_install.sh` 
 - **Cüzdan adresiniz (pubKey)**: Pipe tarafından size verilen veya kendi oluşturduğunuz public key.
 - **RAM Miktarı (GB)**: Node'a ne kadar RAM ayırmak istiyorsanız (en az 4 GB).
 - **Disk Miktarı (GB)**: Node'un kullanabileceği maksimum disk alanı (en az 100 GB).
-- **Referral Kodu**: Varsayılan olarak "f8e32ffad3f0dcad" şeklinde ayarlanmıştır. Soru geldiğinde [E/h] yanıtı vererek bu kodu kullanabilir veya "Hayır" diyerek atlayabilirsiniz.
-- **Pipe Binary (pop) Linki**: Pipe ekibinden e-posta vb. yoluyla size iletilen pop binary linki (mutlaka "https" ile başlamalı). Örnek: https://dl.pipecdn.app/v0.2.5/pop
+- **Referral Kodu**: Varsayılan olarak `f8e32ffad3f0dcad` şeklinde ayarlanmıştır. Soru geldiğinde [E/h] yanıtı vererek bu kodu kullanabilir veya "Hayır" diyerek atlayabilirsiniz.
+- **Pipe Binary (pop) Linki**: Pipe ekibinden e-posta vb. yoluyla size iletilen pop binary linki (mutlaka "https" ile başlamalı). Örnek: `https://dl.pipecdn.app/v0.2.5/pop`
 
 ### 3. Kurulum Otomatik Olarak İlerler
 
