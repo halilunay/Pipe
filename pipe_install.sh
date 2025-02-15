@@ -1,98 +1,98 @@
 #!/bin/bash
 #
-# Pipe Devnet Node Setup Script (systemd) + Otomatik Güncelleme Opsiyonu
-# Referral Kodlu Kurulum
+# Pipe Devnet Node Setup Script (systemd) + Automatic Update Option
+# Installation with Referral Code
 #
 
 echo "-------------------------------------------------"
-echo "  Pipe Devnet Node Kurulumu"
-echo "  Bu script ile, referral kodunu kullanarak"
-echo "  kaydolmak istiyorsanız sorulacak."
-echo "  Ardından, otomatik güncelleme için cron job"
-echo "  ekleme seçeneği sunulacak."
+echo "  Pipe Devnet Node Setup"
+echo "  You will be asked if you want to register"
+echo "  using a referral code."
+echo "  Then, you will have the option to add a cron job"
+echo "  for automatic updates."
 echo "-------------------------------------------------"
 sleep 1
 
-# 1. Giriş Değerlerini Alalım
-echo -n "Cüzdan Adresiniz (pubKey): "
+# 1. Get Input Values
+echo -n "Your Wallet Address (pubKey): "
 read -r PUBKEY
 
-echo -n "Kaç GB RAM ayırmak istiyorsunuz? (en az 4): "
+echo -n "How many GB of RAM do you want to allocate? (minimum 4): "
 read -r RAM
 if [ "$RAM" -lt 4 ]; then
-  echo "Hata: RAM en az 4 GB olmalı!"
+  echo "Error: RAM must be at least 4 GB!"
   exit 1
 fi
 
-echo -n "Maksimum disk alanı (GB olarak, en az 100): "
+echo -n "Maximum disk space (in GB, minimum 100): "
 read -r DISK
 if [ "$DISK" -lt 100 ]; then
-  echo "Hata: Disk alanı en az 100 GB olmalı!"
+  echo "Error: Disk space must be at least 100 GB!"
   exit 1
 fi
 
-# Varsayılan referral kodunuzu buraya yazın
+# Enter your default referral code here
 DEFAULT_REF="f8e32ffad3f0dcad"
-echo -n "Referral kodu kullanmak ister misiniz? (default: $DEFAULT_REF) [E/h]: "
+echo -n "Do you want to use a referral code? (default: $DEFAULT_REF) [Y/n]: "
 read -r REF_CHOICE
-if [[ "$REF_CHOICE" =~ ^(H|h|Hayir|no|n)$ ]]; then
+if [[ "$REF_CHOICE" =~ ^(N|n|No|no)$ ]]; then
   REF_CODE=""
 else
   REF_CODE="$DEFAULT_REF"
 fi
 
-echo "Lütfen, Pipe tarafından e-posta ile gönderilen v2 binary (pop) linkini girin (https ile başlamalı):"
+echo "Please enter the v2 binary (pop) link sent by Pipe via email (must start with https):"
 read -r BINARY_URL
 if [[ $BINARY_URL != https* ]]; then
-    echo "Hata: Link 'https' ile başlamalı!"
+    echo "Error: Link must start with 'https'!"
     exit 1
 fi
 
 echo "------------------------------------"
-echo "Kurulum başlıyor..."
+echo "Starting installation..."
 sleep 1
 
-# 2. Sistem Güncellemesi ve Port Açma
+# 2. System Update and Port Opening
 sudo apt update && sudo apt upgrade -y
 sudo ufw allow 8003/tcp
 
-# 3. Dizin Oluşturma
+# 3. Create Directories
 mkdir -p "$HOME/pipe"
 mkdir -p "$HOME/pipe/download_cache"
 
-# 4. Eski Servisleri Durdur ve Temizle (Varsa)
-echo "Daha önce çalışan popd varsa durduruluyor..."
+# 4. Stop and Clean Old Services (if any)
+echo "Stopping any running popd..."
 sudo systemctl stop popd 2>/dev/null
 sudo systemctl disable popd 2>/dev/null
 
-echo "8003 portunu kullanan süreçleri kapatıyoruz..."
+echo "Killing processes using port 8003..."
 PID=$(lsof -ti :8003)
 if [ -n "$PID" ]; then
   kill -9 "$PID"
 fi
 
-# 5. Binary İndir
+# 5. Download Binary
 cd "$HOME/pipe" || exit
-echo "POP binary indiriliyor..."
+echo "Downloading POP binary..."
 wget -q -O pop "$BINARY_URL"
 chmod +x pop
 
-# 6. Referral ile Kayıt Olma (isteğe bağlı)
-#    Node zaten kayıtlı ise 403 hatası gelebilir.
+# 6. Register with Referral (optional)
+#    If the node is already registered, a 403 error may occur.
 if [ -n "$REF_CODE" ]; then
-  echo "Referral kaydı deneniyor... Kod: $REF_CODE"
+  echo "Attempting referral registration... Code: $REF_CODE"
   OUT=$(./pop --signup-by-referral-route "$REF_CODE" 2>&1)
-  echo "Çıktı: $OUT"
+  echo "Output: $OUT"
   if echo "$OUT" | grep -q "403 Forbidden"; then
-    echo "Uyarı: Node zaten kayıt olmuş veya IP kullanılıyor. Referral kaydı başarısız oldu."
+    echo "Warning: Node is already registered or IP is in use. Referral registration failed."
   else
-    echo "Referral kaydı denemesi tamamlandı."
+    echo "Referral registration attempt completed."
   fi
 fi
 
-# 7. systemd Service Dosyası
+# 7. systemd Service File
 SERVICE_FILE="/etc/systemd/system/popd.service"
-echo "systemd servis dosyası oluşturuluyor: $SERVICE_FILE"
+echo "Creating systemd service file: $SERVICE_FILE"
 
 sudo bash -c "cat <<EOF > $SERVICE_FILE
 [Unit]
@@ -120,39 +120,39 @@ WorkingDirectory=$HOME/pipe
 WantedBy=multi-user.target
 EOF"
 
-# 8. Servisi Başlatma
+# 8. Start the Service
 sudo systemctl daemon-reload
 sudo systemctl enable popd
 sudo systemctl start popd
 
-# 9. Kontrol
+# 9. Check
 echo "------------------------------------"
-echo "Kurulum tamamlandı! Servis çalışıyor."
-echo "Durum görmek için:  sudo systemctl status popd"
-echo "Logları izlemek için: sudo journalctl -u popd -f"
+echo "Installation complete! Service is running."
+echo "To see the status:  sudo systemctl status popd"
+echo "To watch logs: sudo journalctl -u popd -f"
 echo "------------------------------------"
-echo "Ek komutlar (cd \$HOME/pipe):"
+echo "Additional commands (cd \$HOME/pipe):"
 echo "  ./pop --status"
 echo "  ./pop --points-route"
 echo "  ./pop --gen-referral-route"
 echo "------------------------------------"
 
-# 10. Otomatik Güncelleme Opsiyonu
+# 10. Automatic Update Option
 echo ""
-echo "Sık güncellemeler geldiği için otomatik güncelleme ekleyebilirsiniz."
-echo "Bu, her sabah 06:00'da script çalıştırıp güncelleme var mı diye bakacak."
-echo -n "Otomatik güncelleme cron job'ı kurulsun mu? [E/h]: "
+echo "Due to frequent updates, you can add an automatic update."
+echo "This will run the script every morning at 06:00 to check for updates."
+echo -n "Set up an automatic update cron job? [Y/n]: "
 read -r AUTO_UPDATE_CHOICE
 
-if [[ "$AUTO_UPDATE_CHOICE" =~ ^(E|e|Evet|evet|Yes|yes|Y|y)$ ]]; then
+if [[ "$AUTO_UPDATE_CHOICE" =~ ^(Y|y|Yes|yes)$ ]]; then
   
-  # 10.a) auto_update_pipe.sh dosyasını oluştur
+  # 10.a) Create auto_update_pipe.sh file
   cat << 'EOF' > "$HOME/pipe/auto_update_pipe.sh"
 #!/bin/bash
 #
 # Pipe Node Auto Update Script
-# Bu script, 'pop --refresh' çıktısında "UPDATE AVAILABLE" ifadesini yakalar.
-# Varsa, yeni sürüm binary'sini indirip servisi günceller.
+# This script catches the "UPDATE AVAILABLE" statement in 'pop --refresh' output.
+# If available, it downloads the new version binary and updates the service.
 
 cd "$HOME/pipe" || exit 1
 echo "Running auto-update check..."
@@ -160,38 +160,38 @@ echo "Running auto-update check..."
 REFRESH_OUTPUT=$(./pop --refresh 2>&1)
 
 if echo "$REFRESH_OUTPUT" | grep -q "UPDATE AVAILABLE"; then
-    echo "[INFO] Yeni sürüm bulundu. Sürüm bilgisini alıyor..."
+    echo "[INFO] New version found. Getting version info..."
     DOWNLOAD_URL=$(echo "$REFRESH_OUTPUT" | grep "Download URL:" | awk '{print $NF}')
     if [ -n "$DOWNLOAD_URL" ]; then
-        echo "[INFO] Yeni sürüm indiriliyor: $DOWNLOAD_URL"
+        echo "[INFO] Downloading new version: $DOWNLOAD_URL"
         sudo systemctl stop popd
         wget -q -O "$HOME/pipe/pop" "$DOWNLOAD_URL"
         chmod +x "$HOME/pipe/pop"
         ./pop --refresh || true
         sudo systemctl start popd
-        echo "[INFO] Güncelleme tamamlandı. Logları izlemek için: sudo journalctl -u popd -f"
+        echo "[INFO] Update complete. To watch logs: sudo journalctl -u popd -f"
     else
-        echo "[ERROR] 'UPDATE AVAILABLE' var ama indirme URL'si bulunamadı!"
+        echo "[ERROR] 'UPDATE AVAILABLE' but no download URL found!"
     fi
 else
-    echo "[INFO] Güncelleme yok veya zaten güncelsiniz."
+    echo "[INFO] No update or already up-to-date."
 fi
 EOF
 
   chmod +x "$HOME/pipe/auto_update_pipe.sh"
 
-  # 10.b) Cron job ekleyelim (her gün sabah 06:00'da)
+  # 10.b) Add Cron job (every day at 06:00)
   (
     crontab -l 2>/dev/null
     echo "0 6 * * * /bin/bash $HOME/pipe/auto_update_pipe.sh >> $HOME/pipe/auto_update.log 2>&1"
   ) | crontab -
 
-  echo "[OK] Otomatik güncelleme cron job'ı ayarlandı! Her sabah 06:00'da kontrol edecek."
-  echo "Loglar için: $HOME/pipe/auto_update.log"
+  echo "[OK] Automatic update cron job set! It will check every morning at 06:00."
+  echo "For logs: $HOME/pipe/auto_update.log"
 else
-  echo "Otomatik güncelleme kurulmadı. Güncellemeleri manuel yapabilirsiniz."
+  echo "Automatic update not set. You can update manually."
 fi
 
 echo ""
-echo "Kurulum (ve varsa otomatik güncelleme) tamamlandı!"
+echo "Installation (and automatic update if set) complete!"
 echo "---------------------------------------------------"

@@ -1,72 +1,72 @@
-# Pipe Devnet Kurulum Rehberi
+# Pipe Devnet Installation Guide
 
-Bu rehber, **Pipe Network** Devnet node'unuzu **tek komutla** (otomatik veya interaktif) kurmanızı sağlar. Ayrıca **isteğe bağlı otomatik güncelleme** özelliğini içerir.
-
----
-
-## Özellikler
-
-- **Tek Komutla Kurulum**: Sunucunuzda sistem güncellemelerini yapar, `pop` binary'sini indirir, systemd servisi yazar ve node'u başlatır.
-- **Referral Kodu (Opsiyonel)**: İlk kurulumda referral kodunuzu otomatik ekleyebilirsiniz.
-- **Otomatik Güncelleme (Opsiyonel)**: Her gün belirli bir saatte (06:00) otomatik olarak güncelleme kontrolü yapar ve gerekiyorsa yeni sürüme geçer.
+This guide allows you to set up your **Pipe Network** Devnet node with **a single command** (automatic or interactive). It also includes an **optional automatic update** feature.
 
 ---
 
-## Adımlar
+## Features
 
-### 1. Depoyu Klonlayın veya Script'i RAW Formatında İndirin
+- **Single Command Installation**: Updates your server, downloads the `pop` binary, writes the systemd service, and starts the node.
+- **Referral Code (Optional)**: You can automatically add your referral code during the initial setup.
+- **Automatic Update (Optional)**: Checks for updates every day at a specified time (06:00) and upgrades to the new version if necessary.
 
-En kolay yöntem, `pipe_install.sh` adlı script dosyanızı doğrudan indirmek ve çalıştırmaktır:
+---
+
+## Steps
+
+### 1. Clone the Repository or Download the Script in RAW Format
+
+The easiest way is to download and run the `pipe_install.sh` script directly:
 
 ```bash
-# Aşağıdaki link, scriptin RAW (ham) formatına işaret etmelidir.
+# The link below should point to the script in RAW format.
 wget https://raw.githubusercontent.com/halilunay/Pipe/refs/heads/main/pipe_install.sh
 
-# Çalıştırma izni verelim
+# Grant execute permission
 chmod +x pipe_install.sh
 
-# Script'i çalıştır
+# Run the script
 ./pipe_install.sh
 ```
 
-Eğer "Permission denied" gibi bir hata alırsanız, `chmod +x pipe_install.sh` komutunu tekrar kontrol edin.
+If you encounter a "Permission denied" error, check the `chmod +x pipe_install.sh` command again.
 
-### 2. Script'in Sorduğu Soruları Cevaplayın
+### 2. Answer the Questions Asked by the Script
 
-- **Cüzdan adresiniz (pubKey)**: Pipe tarafından size verilen veya kendi oluşturduğunuz public key.
-- **RAM Miktarı (GB)**: Node'a ne kadar RAM ayırmak istiyorsanız (en az 4 GB).
-- **Disk Miktarı (GB)**: Node'un kullanabileceği maksimum disk alanı (en az 100 GB).
-- **Referral Kodu**: Varsayılan olarak `f8e32ffad3f0dcad` şeklinde ayarlanmıştır. Soru geldiğinde [E/h] yanıtı vererek bu kodu kullanabilir veya "Hayır" diyerek atlayabilirsiniz.
-- **Pipe Binary (pop) Linki**: Pipe ekibinden e-posta vb. yoluyla size iletilen pop binary linki (mutlaka "https" ile başlamalı). Örnek: `https://dl.pipecdn.app/v0.2.5/pop`
+- **Your Wallet Address (pubKey)**: The public key provided by Pipe or created by you.
+- **RAM Amount (GB)**: How much RAM you want to allocate to the node (minimum 4 GB).
+- **Disk Amount (GB)**: Maximum disk space the node can use (minimum 100 GB).
+- **Referral Code**: Default is set to `f8e32ffad3f0dcad`. You can use this code by answering [Y/n] or skip by saying "No".
+- **Pipe Binary (pop) Link**: The pop binary link sent to you by the Pipe team via email (must start with "https"). Example: `https://dl.pipecdn.app/v0.2.5/pop`
 
-### 3. Kurulum Otomatik Olarak İlerler
+### 3. Installation Proceeds Automatically
 
-Script şunları yapar:
+The script does the following:
 
-- **Sistem Güncellemeleri**: `sudo apt update && sudo apt upgrade -y`
-- **Port İzni**: `sudo ufw allow 8003/tcp`
-- **Dizinler Oluşturma**: `$HOME/pipe` ve `$HOME/pipe/download_cache`
-- **Eski Servisleri Temizleme**: `popd` adlı bir servis çalışıyorsa durdurur, siler.
-- **Binary İndirip Çalıştırma**:
-  - İndirdiği dosyayı `pop` ismiyle kaydeder, `chmod +x` verir.
-  - Referral kodu kullanmayı seçtiyseniz, script `--signup-by-referral-route` parametresiyle kaydı dener.
-- **systemd Servisi Yazma ve Başlatma**: `popd.service` adıyla `/etc/systemd/system/` altında bir servis dosyası oluşturur, daemon'ı yeniler, servisi aktif eder.
+- **System Updates**: `sudo apt update && sudo apt upgrade -y`
+- **Port Permission**: `sudo ufw allow 8003/tcp`
+- **Create Directories**: `$HOME/pipe` and `$HOME/pipe/download_cache`
+- **Clean Old Services**: Stops and deletes any running `popd` service.
+- **Download and Run Binary**:
+  - Saves the downloaded file as `pop`, grants `chmod +x`.
+  - If you choose to use a referral code, the script attempts registration with the `--signup-by-referral-route` parameter.
+- **Write and Start systemd Service**: Creates a service file under `/etc/systemd/system/` named `popd.service`, reloads the daemon, and activates the service.
 
-### 4. Kurulum Sonrası Kontroller
+### 4. Post-Installation Checks
 
-- **Servis Durumu**:
+- **Service Status**:
 
 ```bash
 sudo systemctl status popd
 ```
 
-- **Logları Takip Etme**:
+- **Follow Logs**:
 
 ```bash
 sudo journalctl -u popd -f
 ```
 
-- **Pop Binary Ek Komutlar**:
+- **Additional Pop Binary Commands**:
 
 ```bash
 cd $HOME/pipe
@@ -75,15 +75,15 @@ cd $HOME/pipe
 ./pop --gen-referral-route
 ```
 
-### 5. Otomatik Güncelleme Seçeneği
+### 5. Automatic Update Option
 
-Script, kurulum bitince size "Otomatik güncelleme cron job'ı kurulsun mu?" diye sorar:
+After installation, the script asks if you want to set up an "Automatic update cron job":
 
-- **Evet** derseniz (E/e/Yes/y), her gün sabah 06:00'da `auto_update_pipe.sh` adında bir script çalışır.
-  - Bu script `./pop --refresh` içerisinde "UPDATE AVAILABLE" ifadesini arar.
-  - Yeni sürüm bulursa binary'yi indirir, servisi durdurur/günceller, tekrar başlatır.
-  - Başarı veya hata mesajlarını `$HOME/pipe/auto_update.log` dosyasına yazar.
-- **Hayır** derseniz (H/h/No/n), otomatik güncelleme eklenmez. Dilerseniz güncellemeleri manuel yapabilirsiniz. Örneğin:
+- **Yes** (Y/y/Yes/yes) sets up a script named `auto_update_pipe.sh` to run every day at 06:00.
+  - This script looks for "UPDATE AVAILABLE" in `./pop --refresh`.
+  - If a new version is found, it downloads the binary, stops/updates the service, and restarts it.
+  - Writes success or error messages to `$HOME/pipe/auto_update.log`.
+- **No** (N/n/No/no) does not add automatic updates. You can update manually if desired. For example:
 
 ```bash
 sudo systemctl stop popd
@@ -94,28 +94,28 @@ sudo systemctl daemon-reload
 sudo systemctl start popd
 ```
 
-### 6. Sıkça Sorulan Sorular (FAQ)
+### 6. Frequently Asked Questions (FAQ)
 
-- **Referral Kodunu Sonradan Ekleyebilir miyim?**
-  - Ne yazık ki Pipe tarafında aynı IP/node ID için tekrar referral kaydı yapmak mümkün değil. Node ilk kayıtta referral girilmedi ise daha sonra 403 hatası alırsınız. Bu durum Pipe Network backend kısıtlamasından kaynaklanıyor.
+- **Can I Add a Referral Code Later?**
+  - Unfortunately, it is not possible to register the same IP/node ID with a referral code again. If no referral was entered during the first registration, you will receive a 403 error later. This is due to Pipe Network backend restrictions.
 
-- **Port 8003 Açık mı, Nasıl Emin Olurum?**
-  - `sudo ufw status` komutu ile ufw açıksa kuralı görebilirsiniz.
-  - Dışarıdan port checker (ör. portchecker.co) ile sunucunuzun IP ve 8003'ü sorgulayabilirsiniz.
+- **Is Port 8003 Open, How Can I Be Sure?**
+  - You can see the rule if ufw is open with the `sudo ufw status` command.
+  - You can check your server's IP and 8003 with an external port checker (e.g., portchecker.co).
 
-- **Diğer VPS Güvenlik Duvarı Ayarları**
-  - Bazı VPS sağlayıcıları (Hetzner, DigitalOcean vb.) kendi panelinde ek firewall kuralı gerektirir. Panelden 8003 TCP portunu açmanız gerekebilir.
+- **Other VPS Firewall Settings**
+  - Some VPS providers (Hetzner, DigitalOcean, etc.) may require additional firewall rules in their panel. You may need to open the 8003 TCP port from the panel.
 
-- **Güncellemeler Neden Bu Kadar Sık Geliyor?**
-  - Pipe Network Devnet hâlâ aktif geliştirme aşamasında olabilir. Bu nedenle sık güncellemeler doğal bir süreçtir. Otomatik güncelleme bu yükü hafifletir.
+- **Why Are Updates So Frequent?**
+  - Pipe Network Devnet may still be in active development. Therefore, frequent updates are a natural process. Automatic updates alleviate this burden.
 
 ---
 
-## Sonuç
+## Conclusion
 
-Bu rehberdeki adımları izleyerek, Pipe Network Devnet node'unuzu tek komutla kurabilir, isteğe bağlı referral kodu kullanabilir ve otomatik güncellemelerle node'unuzu sürekli güncel tutabilirsiniz.
+By following the steps in this guide, you can set up your Pipe Network Devnet node with a single command, optionally use a referral code, and keep your node continuously updated with automatic updates.
 
-Sorularınız veya hatalarınız olduğunda:
+If you have questions or encounter errors:
 
-- `journalctl -u popd -f` logları inceleyin,
-- GitHub üzerinden Issue açın ya da topluluk/forum kanallarına göz atın.
+- Check the logs with `journalctl -u popd -f`,
+- Open an Issue on GitHub or check community/forum channels.
